@@ -15,7 +15,7 @@ class OptOut:
             'fastpeoplesearch'
         ]
 
-    def get_html(self):
+    def get_page_html(self):
         url = 'https://www.google.com/search?q={0}&start={1}'.format(self.name, self.page_count)
         response = requests.get(url)
         if response.ok and response.status_code == 200:
@@ -41,8 +41,7 @@ class OptOut:
             print('{0} --> {1}'.format(index, site))
 
             while site in self.sites:
-                html = self.get_html()
-                link_html = html.find(href=re.compile(site))
+                link_html = self.get_page_html().find(href=re.compile(site))
 
                 if link_html is None:
                     self.page_count += 10
