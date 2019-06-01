@@ -34,8 +34,7 @@ class OptOut:
         self.page_count += 10
         return self.get_html()
 
-    def add_link(self, site, link_html):
-        print('We found "{0}" on page {1} of {2}'.format(site, self.get_page_number(), 'google.com'))
+    def add_link(self, link_html):
         url = link_html.get('href').replace('/url?q=', '')
         self.links.append(url)
         self.sites.pop(0)
@@ -46,13 +45,14 @@ class OptOut:
         html = self.get_html()
         for index in range(len(self.sites)):
             site = self.sites[0]
-            print(index, '-->', site)
+            print('{0} --> {1}'.format(index, site))
             while site in self.sites:
                 link_html = html.find(href=re.compile(site))
                 if link_html is None:
                     html = self.search_next_page()
                 else:
-                    html = self.add_link(site, link_html)
+                    print('We found "{0}" on page {1} of {2}'.format(site, self.get_page_number(), 'google.com'))
+                    html = self.add_link(link_html)
                     break
             print('--------------------------------')
         return self.links
