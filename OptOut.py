@@ -15,14 +15,14 @@ class OptOut:
             'fastpeoplesearch'
         ]
 
-    def get_page_html(self):
-        url = 'https://www.google.com/search?q={0}&start={1}'.format(self.name, self.page_count)
+    @staticmethod
+    def get_page_html(url):
         response = requests.get(url)
         if response.ok and response.status_code == 200:
             return BeautifulSoup(response.text, 'html.parser')
         else:
-            raise Exception('Received status code {0} when trying to retrieve a response from "{1}"'
-                            .format(response.status_code, url))
+            error_message = 'Status code {0} when trying to retrieve a response from "{1}"'
+            raise Exception(error_message.format(response.status_code, url))
 
     def get_page_number(self):
         if self.page_count > 0:
@@ -35,27 +35,33 @@ class OptOut:
         self.links.append(url)
         self.sites.pop(0)
 
-    def get_links(self):
+    def get_links_from_google(self):
         for index in range(len(self.sites)):
             site = self.sites[0]
             print('{0} --> {1}'.format(index, site))
 
             while site in self.sites:
-                link_html = self.get_page_html().find(href=re.compile(site))
+                google_url = 'https://www.google.com/search?q={0}&start={1}'.format(self.name, self.page_count)
+                link_html = OptOut.get_page_html(google_url).find(href=re.compile(site))
 
-                if link_html is None:
-                    self.page_count += 10
-                else:
+                if link_html is not None:
                     print('We found "{0}" on page {1} of {2}'.format(site, self.get_page_number(), 'google.com'))
                     self.page_count = 0
                     self.add_link(link_html)
                     break
+                elif self.page_count > 100:
+                    self.page_count = 0
+                    self.sites.pop(0)
+                    print('you have reached the limit for searching for', site)
+                    break
+                else:
+                    self.page_count += 10
 
-            print('--------------------------------')
+            print('\n--------------------------------\n')
         return self.links
 
     def run(self):
-        links = self.get_links()
+        links = self.get_links_from_google()
         print(links)
 
 
@@ -66,10 +72,10 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     try:
-        print('Starting the Opt Out process...')
+        print('\n <<< Starting the Opt Out process... >>> \n')
         obj = OptOut(args.name)
         obj.run()
     except Exception as err:
         print('Handling run-time error:', err)
     finally:
-        print('Opt Out process has ended...')
+        print('\n <<< Opt Out process has ended... >>> \n')
